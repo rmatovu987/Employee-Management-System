@@ -23,7 +23,7 @@ public class EmailServices {
 
 	public Boolean signup(String fullname,  String password, String email) {
 
-		String mail = signup.data("password", password).data("fullname", fullname)
+		String mail = signup.data("password", password).data("fullname", fullname).data("email", email)
 				.data("systemName", Constants.systemName).data("loginUrl", Constants.loginUrl)
 				.render();
 
@@ -52,7 +52,7 @@ public class EmailServices {
 
 	public Boolean passwordreset(String email, String username, String password) {
 
-		String mail = passwordreset.data("username", username).data("password", password)
+		String mail = passwordreset.data("username", username).data("password", password).data("companyName", Constants.companyName)
 				.data("systemName", Constants.systemName).render();
 
 		reactiveMailer.send(Mail.withHtml(email, Constants.systemName + " Password Reset", mail))

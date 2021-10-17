@@ -26,17 +26,20 @@ import com.employeemanager.utilities.PositionEnum;
 
 import org.eclipse.microprofile.openapi.annotations.Operation;
 import org.eclipse.microprofile.openapi.annotations.enums.SchemaType;
+import org.eclipse.microprofile.openapi.annotations.enums.SecuritySchemeType;
 import org.eclipse.microprofile.openapi.annotations.media.Content;
 import org.eclipse.microprofile.openapi.annotations.media.Schema;
 import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
 import org.eclipse.microprofile.openapi.annotations.security.SecurityRequirement;
+import org.eclipse.microprofile.openapi.annotations.security.SecurityScheme;
 import org.eclipse.microprofile.openapi.annotations.tags.Tag;
 
 @Path("employee")
 @Produces("application/json")
 @Consumes("application/json")
 @Tag(name = "Employees", description = "Manage employees")
-@SecurityRequirement(name = "Authorization")
+@SecurityRequirement(name = "jwt", scopes ={})
+@SecurityScheme(securitySchemeName = "jwt", type = SecuritySchemeType.HTTP, scheme = "bearer", bearerFormat="jwt")
 public class EmployeeController {
 
     @Inject

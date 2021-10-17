@@ -11,6 +11,8 @@ import java.util.Optional;
 import javax.json.bind.annotation.JsonbDateFormat;
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.Table;
+import javax.persistence.UniqueConstraint;
 import javax.validation.constraints.Email;
 import javax.validation.constraints.NotNull;
 
@@ -26,6 +28,8 @@ import org.wildfly.security.password.util.ModularCrypt;
 import io.quarkus.hibernate.orm.panache.PanacheEntity;
 
 @Entity
+@Table(uniqueConstraints = { @UniqueConstraint(columnNames = "email"), @UniqueConstraint(columnNames = "code"),
+        @UniqueConstraint(columnNames = "phoneNumber"), @UniqueConstraint(columnNames = "nationalIdNumber") })
 public class Employee extends PanacheEntity {
 
     @NotNull
@@ -95,13 +99,21 @@ public class Employee extends PanacheEntity {
     }
 
     /**
-     * Find an employee by thier email
+     * Find an employee by their email
      * 
      * @param email
      * @return The employee whose email was provided or null if not found
      */
     public static Employee findByEmail(String email) {
         return find("email", email).firstResult();
+    }
+
+    public static Employee findByPhoneNumber(String phoneNumber) {
+        return find("phoneNumber", phoneNumber).firstResult();
+    }
+
+    public static Employee findByNationalIdNumber(String nationalIdNumber) {
+        return find("nationalIdNumber", nationalIdNumber).firstResult();
     }
 
     /**

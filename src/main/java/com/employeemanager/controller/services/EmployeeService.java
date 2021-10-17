@@ -22,6 +22,7 @@ public class EmployeeService {
 
     /**
      * Create an employee
+     * 
      * @param request
      * @param employer
      * @return the created employee details
@@ -30,6 +31,14 @@ public class EmployeeService {
         Employee exists = Employee.findByEmail(request.email);
         if (exists != null)
             throw new WebApplicationException("Employee with email " + request.email + " already exists", 409);
+
+        Employee exists1 = Employee.findByNationalIdNumber(request.nationalIdNumber);
+        if (exists1 != null)
+            throw new WebApplicationException("Employee with that national id number already exists", 409);
+
+        Employee exists2 = Employee.findByPhoneNumber(request.phoneNumber);
+        if (exists2 != null)
+            throw new WebApplicationException("Employee with phone number " + request.phoneNumber + " already exists", 409);
 
         Employee employee = new Employee(request.firstname, request.lastname, request.othername,
                 request.nationalIdNumber, request.phoneNumber, request.dateOfBirth, request.email, request.position);
@@ -46,6 +55,7 @@ public class EmployeeService {
 
     /**
      * Update the details of a employee
+     * 
      * @param id
      * @param request
      * @param employer
@@ -76,6 +86,7 @@ public class EmployeeService {
 
     /**
      * Suspend an existing employee.
+     * 
      * @param id
      * @param employer
      * @return the suspended employee
@@ -99,6 +110,7 @@ public class EmployeeService {
 
     /**
      * Activate an employee
+     * 
      * @param id
      * @param employer
      * @return the activated employee
@@ -122,6 +134,7 @@ public class EmployeeService {
 
     /**
      * Fetch a list of employees based on the provided query parameters.
+     * 
      * @param firstname
      * @param lastname
      * @param email
@@ -137,6 +150,7 @@ public class EmployeeService {
 
     /**
      * Delete an existing employee
+     * 
      * @param id
      * @param employer
      * @return details of the deleted employee

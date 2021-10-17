@@ -30,6 +30,18 @@ public class AuthService {
      * @param request
      */
     public void signup(SignupRequest request) {
+        Employee exists = Employee.findByEmail(request.email);
+        if (exists != null)
+            throw new WebApplicationException("Employee with email " + request.email + " already exists", 409);
+
+        Employee exists1 = Employee.findByNationalIdNumber(request.nationalIdNumber);
+        if (exists1 != null)
+            throw new WebApplicationException("Employee with that national id number already exists", 409);
+
+        Employee exists2 = Employee.findByPhoneNumber(request.phoneNumber);
+        if (exists2 != null)
+            throw new WebApplicationException("Employee with phone number " + request.phoneNumber + " already exists",
+                    409);
 
         String password = BcryptUtil.bcryptHash(request.password);
 
@@ -39,6 +51,7 @@ public class AuthService {
         employee.password = password;
         employee.persist();
 
+        emailService.signup(employee.firstname + " " + employee.lastname, request.password, employee.email);
     }
 
     public String login(LoginRequest request) {
@@ -65,21 +78,20 @@ public class AuthService {
 
         validUser.password = genpassword;
 
-        emailService.passwordreset(validUser.email,
-                validUser.firstname + " " + validUser.lastname, password);
+        emailService.passwordreset(validUser.email, validUser.firstname + " " + validUser.lastname, password);
 
         return "Please check your email for new credentials!";
     }
 
     private String randomString(int length) {
 
-		int leftLimit = 97; // letter 'a'
-		int rightLimit = 122; // letter 'z'
-		StringBuilder buffer = new StringBuilder(length);
-		for (int i = 0; i < length; i++) {
-			int randomLimitedInt = leftLimit + (new Random().nextInt() * (rightLimit - leftLimit + 1));
-			buffer.append((char) randomLimitedInt);
-		}
-		return buffer.toString();
-	}
+        int leftLimit = 97; // letter 'a'
+        int rightLimit = 122; // letter 'z'
+        StringBuilder buffer = new StringBuilder(length);
+        for (int i = 0; i < length; i++) {
+            int randomLimitedInt = leftLimit + (int)(new Random().nextFloat() * (rightLimit - leftLimit + 1));
+            buffer.append((char) randomLimitedInt);
+        }
+        return buffer.toString();
+    }
 }

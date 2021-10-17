@@ -51,7 +51,7 @@ public class CustomAwareJWTAuthMechanism implements HttpAuthenticationMechanism 
 
         HttpServerRequest request = context.request();
 
-        if (request.path().startsWith("/server-api/auth") 
+        if (request.path().startsWith("/auth") 
             || request.path().contains("/swagger")
             || request.path().contains("/file")) {
             return Uni.createFrom().optional(Optional.empty());

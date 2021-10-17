@@ -4,10 +4,8 @@ public interface Constants {
 
 	static String systemName = "Employee Management System";
 
-	///to be set
-	static String companyName = "";
-
-	static String loginpassword = "123";
+	///to be changed
+	static String companyName = "Employer";
 
 	//to be set
 	static String serverLink = "";
