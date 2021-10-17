@@ -1,8 +1,12 @@
 package com.employeemanager.domain;
 
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
+import java.security.spec.InvalidKeySpecException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 import javax.json.bind.annotation.JsonbDateFormat;
 import javax.persistence.Column;
@@ -11,6 +15,13 @@ import javax.validation.constraints.Email;
 import javax.validation.constraints.NotNull;
 
 import com.employeemanager.utilities.StatusTypeEnum;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.wildfly.security.password.Password;
+import org.wildfly.security.password.PasswordFactory;
+import org.wildfly.security.password.interfaces.BCryptPassword;
+import org.wildfly.security.password.util.ModularCrypt;
 
 import io.quarkus.hibernate.orm.panache.PanacheEntity;
 
@@ -24,6 +35,9 @@ public class Employee extends PanacheEntity {
     @NotNull
     @Column(nullable = false)
     public String lastname;
+
+    @Column(nullable = true)
+    public String password;
 
     @NotNull
     @Column(nullable = true)
@@ -67,8 +81,8 @@ public class Employee extends PanacheEntity {
     public Employee() {
     }
 
-    public Employee(String firstname, String lastname, String othername, String nationalIdNumber, 
-            String phoneNumber, LocalDate dateOfBirth, String email, String position) {
+    public Employee(String firstname, String lastname, String othername, String nationalIdNumber, String phoneNumber,
+            LocalDate dateOfBirth, String email, String position) {
         this.firstname = firstname;
         this.lastname = lastname;
         this.othername = othername;
@@ -82,15 +96,17 @@ public class Employee extends PanacheEntity {
 
     /**
      * Find an employee by thier email
+     * 
      * @param email
      * @return The employee whose email was provided or null if not found
      */
-    public static Employee findByEmail(String email){
+    public static Employee findByEmail(String email) {
         return find("email", email).firstResult();
     }
 
     /**
      * Search for employees based on given query parameters
+     * 
      * @param firstname
      * @param lastname
      * @param position
@@ -107,11 +123,62 @@ public class Employee extends PanacheEntity {
                 firstname, lastname, position, phoneNumber, email, code);
     }
 
+    public static Employee login(String email, String password) {
+        Optional<Employee> T = Employee.find("email", email).singleResultOptional();
+        if (T.isPresent()) {
+            Employee user = T.get();
+            if (verifyPassword(password, user.password)) {
+                return user;
+            }
+        }
+        return null;
+    }
+
+    private static boolean verifyPassword(String originalPwd, String encryptedPwd) {
+        Logger logger = LoggerFactory.getLogger(Employee.class);
+
+        try {
+            // convert encrypted password string to a password key
+            Password rawPassword = ModularCrypt.decode(encryptedPwd);
+
+            try {
+                // create the password factory based on the bcrypt algorithm
+                PasswordFactory factory = PasswordFactory.getInstance(BCryptPassword.ALGORITHM_BCRYPT);
+
+                try {
+
+                    // create encrypted password based on stored string
+                    BCryptPassword restored = (BCryptPassword) factory.translate(rawPassword);
+
+                    // verify restored password against original
+                    return factory.verify(restored, originalPwd.toCharArray());
+
+                } catch (InvalidKeyException e) {
+                    logger.error("Invalid password key: {}", e.getMessage());
+
+                }
+
+            } catch (NoSuchAlgorithmException e) {
+                logger.error("Invalid Algorithm: {}", e.getMessage());
+
+            }
+
+        } catch (InvalidKeySpecException e) {
+            logger.error("Invalid key: {}", e.getMessage());
+
+        }
+
+        return false;
+
+    }
+
     /**
-     * Generates a code for a new employee. The code increments the latest employee's code.
+     * Generates a code for a new employee. The code increments the latest
+     * employee's code.
+     * 
      * @return generated code for the new employee.
      */
-    private String generateCode(){
+    private String generateCode() {
         List<Employee> employeeList = Employee.listAll();
 
         int latestAccount = 0;

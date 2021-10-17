@@ -3,6 +3,7 @@ package com.employeemanager.controller.services;
 import java.util.List;
 
 import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 import javax.ws.rs.WebApplicationException;
@@ -10,10 +11,14 @@ import javax.ws.rs.WebApplicationException;
 import com.employeemanager.auditTrail.AuditTrail;
 import com.employeemanager.controller.services.payload.EmployeeRequest;
 import com.employeemanager.domain.Employee;
+import com.employeemanager.utilities.EmailServices;
 import com.employeemanager.utilities.StatusTypeEnum;
 
 @ApplicationScoped
 public class EmployeeService {
+
+    @Inject
+    EmailServices emailService;
 
     /**
      * Create an employee
@@ -33,6 +38,8 @@ public class EmployeeService {
         Jsonb jsonb = JsonbBuilder.create();
         AuditTrail audit = new AuditTrail("SAVED", employee.id, null, jsonb.toJson(employee), employer);
         audit.persist();
+
+        emailService.createuser(employee.firstname + " " + employee.lastname, request.email);
 
         return employee;
     }
