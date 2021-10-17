@@ -8,12 +8,12 @@ If you want to learn more about Quarkus, please visit its website: https://quark
 
 1. Create a database called employeemanager in MYSQL.
 2. Go to the application.properties file and set the following properties:
-    -quarkus.datasource.username (username for the database)
-    -quarkus.datasource.password (password for the database)
-    -quarkus.mailer.from (email address to send the emails)
-    -quarkus.mailer.host (your mailing host)
-    -quarkus.mailer.username (the email address to send the emails)
-    -quarkus.mailer.password (the password for the email address that sends the emails)
+    - quarkus.datasource.username (username for the database)
+    - quarkus.datasource.password (password for the database)
+    - quarkus.mailer.from (email address to send the emails)
+    - quarkus.mailer.host (your mailing host)
+    - quarkus.mailer.username (the email address to send the emails)
+    - quarkus.mailer.password (the password for the email address that sends the emails)
 
 And you can now run the application.
 ## Running the application in dev mode
