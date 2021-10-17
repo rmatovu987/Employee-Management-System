@@ -1,11 +1,14 @@
 package com.employeemanager.controller.services;
 
+import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.Random;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.ws.rs.WebApplicationException;
 
+import com.employeemanager.auditTrail.AuthTrail;
 import com.employeemanager.configuration.security.JwtUtils;
 import com.employeemanager.controller.services.payload.LoginRequest;
 import com.employeemanager.controller.services.payload.SignupRequest;
@@ -14,6 +17,7 @@ import com.employeemanager.utilities.EmailServices;
 import com.employeemanager.utilities.PositionEnum;
 
 import io.quarkus.elytron.security.common.BcryptUtil;
+import io.vertx.core.http.HttpServerRequest;
 
 @ApplicationScoped
 public class AuthService {
@@ -29,7 +33,7 @@ public class AuthService {
      * 
      * @param request
      */
-    public void signup(SignupRequest request) {
+    public void signup(SignupRequest request, HttpServerRequest httprequest) {
         Employee exists = Employee.findByEmail(request.email);
         if (exists != null)
             throw new WebApplicationException("Employee with email " + request.email + " already exists", 409);
@@ -43,6 +47,15 @@ public class AuthService {
             throw new WebApplicationException("Employee with phone number " + request.phoneNumber + " already exists",
                     409);
 
+        if (!Employee.checkPhoneNumberFormat(request.phoneNumber))
+            throw new WebApplicationException("Invalid phone number format", 403);
+
+        if (request.nationalIdNumber.length() != 16)
+            throw new WebApplicationException("National ID Number must be 16 characters", 403);
+
+        if (ChronoUnit.YEARS.between(LocalDateTime.now(), request.dateOfBirth.atStartOfDay()) >= 18)
+            throw new WebApplicationException("You are below the minimum age of 18 years", 403);
+
         String password = BcryptUtil.bcryptHash(request.password);
 
         Employee employee = new Employee(request.firstname, request.lastname, request.othername,
@@ -52,9 +65,13 @@ public class AuthService {
         employee.persist();
 
         emailService.signup(employee.firstname + " " + employee.lastname, request.password, employee.email);
+
+        AuthTrail auth = new AuthTrail(httprequest.remoteAddress().toString(), request.email,
+                httprequest.getHeader("User-Agent"), "SIGNUP");
+        auth.persist();
     }
 
-    public String login(LoginRequest request) {
+    public String login(LoginRequest request, HttpServerRequest httprequest) {
 
         Employee employee = Employee.findByEmail(request.email);
         if (employee == null)
@@ -64,10 +81,14 @@ public class AuthService {
         if (login == null)
             throw new WebApplicationException("Invalid credentials", 404);
 
+        AuthTrail auth = new AuthTrail(httprequest.remoteAddress().toString(), request.email,
+                httprequest.getHeader("User-Agent"), "LOGIN");
+        auth.persist();
+
         return jwtUtils.generateJwtToken(employee.email);
     }
 
-    public String resetPasswordToken(String email) {
+    public String resetPasswordToken(String email, HttpServerRequest httprequest) {
         Employee validUser = Employee.findByEmail(email);
         if (validUser == null) {
             throw new WebApplicationException("User doesn't exist!", 404);
@@ -80,6 +101,9 @@ public class AuthService {
 
         emailService.passwordreset(validUser.email, validUser.firstname + " " + validUser.lastname, password);
 
+        AuthTrail auth = new AuthTrail(httprequest.remoteAddress().toString(), email, httprequest.getHeader("User-Agent"), "RESET-PASSWORD");
+        auth.persist();
+
         return "Please check your email for new credentials!";
     }
 
@@ -89,7 +113,7 @@ public class AuthService {
         int rightLimit = 122; // letter 'z'
         StringBuilder buffer = new StringBuilder(length);
         for (int i = 0; i < length; i++) {
-            int randomLimitedInt = leftLimit + (int)(new Random().nextFloat() * (rightLimit - leftLimit + 1));
+            int randomLimitedInt = leftLimit + (int) (new Random().nextFloat() * (rightLimit - leftLimit + 1));
             buffer.append((char) randomLimitedInt);
         }
         return buffer.toString();

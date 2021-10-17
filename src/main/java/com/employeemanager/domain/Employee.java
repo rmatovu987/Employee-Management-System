@@ -7,6 +7,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.regex.Pattern;
 
 import javax.json.bind.annotation.JsonbDateFormat;
 import javax.persistence.Column;
@@ -135,6 +136,12 @@ public class Employee extends PanacheEntity {
                 firstname, lastname, position, phoneNumber, email, code);
     }
 
+    /**
+     * Verifies if the login credentials are correct
+     * @param email
+     * @param password
+     * @return the employee if credentials are correct or null otherwise
+     */
     public static Employee login(String email, String password) {
         Optional<Employee> T = Employee.find("email", email).singleResultOptional();
         if (T.isPresent()) {
@@ -204,6 +211,16 @@ public class Employee extends PanacheEntity {
         }
 
         return "EMP" + (latestAccount + 1);
+    }
+
+    public static Boolean checkPhoneNumberFormat(String phoneNumber){
+        Pattern pattern = Pattern.compile("^\\+(250)?[7][0-9]{8}$");
+
+        if (pattern.matcher(phoneNumber).matches()){
+            return Boolean.TRUE;
+        }
+
+        return Boolean.FALSE;
     }
 
 }

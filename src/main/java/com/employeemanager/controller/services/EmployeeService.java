@@ -1,5 +1,7 @@
 package com.employeemanager.controller.services;
 
+import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 
 import javax.enterprise.context.ApplicationScoped;
@@ -38,7 +40,17 @@ public class EmployeeService {
 
         Employee exists2 = Employee.findByPhoneNumber(request.phoneNumber);
         if (exists2 != null)
-            throw new WebApplicationException("Employee with phone number " + request.phoneNumber + " already exists", 409);
+            throw new WebApplicationException("Employee with phone number " + request.phoneNumber + " already exists",
+                    409);
+
+        if (!Employee.checkPhoneNumberFormat(request.phoneNumber))
+            throw new WebApplicationException("Invalid phone number format", 403);
+
+        if (request.nationalIdNumber.length() != 16)
+            throw new WebApplicationException("National ID Number must be 16 characters", 403);
+
+        if (ChronoUnit.YEARS.between(LocalDateTime.now(), request.dateOfBirth.atStartOfDay()) >= 18)
+            throw new WebApplicationException("The person is below the minimum age of 18 years", 403);
 
         Employee employee = new Employee(request.firstname, request.lastname, request.othername,
                 request.nationalIdNumber, request.phoneNumber, request.dateOfBirth, request.email, request.position);
@@ -65,6 +77,12 @@ public class EmployeeService {
         Employee employee = Employee.findById(id);
         if (employee == null)
             throw new WebApplicationException("Employee with id " + id + " does not exist", 404);
+
+        if (!Employee.checkPhoneNumberFormat(request.phoneNumber))
+            throw new WebApplicationException("Invalid phone number format", 403);
+
+        if (request.nationalIdNumber.length() != 16)
+            throw new WebApplicationException("National ID Number must be 16 characters", 403);
 
         Employee emp = employee;
 
